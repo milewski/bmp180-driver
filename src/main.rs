@@ -28,7 +28,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     let mut sensor = sensor.initialize(Sampling::UltraHigResolution)?;
 
     loop {
-        println!("T: {:?}, A: {:?}", sensor.temperature()?, sensor.altitude()?);
+        println!("{:?}", sensor.read_all_data()?);
     }
 
     // let mut buffer = [0;8];

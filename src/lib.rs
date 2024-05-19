@@ -1,5 +1,4 @@
 use std::i16;
-use std::ops::{Deref, DerefMut, RangeBounds};
 
 use embedded_hal::i2c::{ErrorType, I2c};
 use esp_idf_svc::hal::delay::FreeRtos;
@@ -93,6 +92,14 @@ impl CalibrationCoefficients {
 
         (p) + ((x1 + x2 + 3791) >> 4)
     }
+
+    fn calculate_altitude(&self, pressure: i32) -> f32 {
+        let sea_level_pressure = 101_325f32;
+        let p_sea_level_ratio: f32 = pressure as f32 / sea_level_pressure;
+        let altitude = 44_330.0 * (1.0 - p_sea_level_ratio.powf(1.0 / 5.255));
+
+        altitude
+    }
 }
 
 enum RegisterMap {
@@ -168,6 +175,8 @@ impl<T: I2c> CommonActions<T> for BMP180<T> {
     }
 }
 
+struct Payload {}
+
 impl<T: I2c> InitializedBMP180<T> {
     fn read_ut(&mut self) -> Result<u16, T::Error> {
         self.inner.write(&[RegisterMap::MeasurementControl as u8, Command::TemperatureCommand as u8])?;
@@ -200,6 +209,18 @@ impl<T: I2c> InitializedBMP180<T> {
         let (temperature, _) = self.data.calculate_temperature(ut as i32);
 
         Ok(temperature)
+    }
+
+    pub fn read_all_data(&mut self) -> Result<(f32, i32, f32), T::Error> {
+        let ut = self.read_ut()?;
+        let up = self.read_up()?;
+
+        let (temperature, b5) = self.data.calculate_temperature(ut as i32);
+
+        let pressure = self.data.calculate_pressure(b5, up);
+        let altitude = self.data.calculate_altitude(pressure);
+
+        Ok((temperature, pressure, altitude))
     }
 
     pub fn get_pressure(&mut self) -> Result<i32, T::Error> {
