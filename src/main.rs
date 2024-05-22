@@ -5,7 +5,7 @@ use esp_idf_svc::hal::i2c::config::Config;
 use esp_idf_svc::hal::i2c::I2cDriver;
 use esp_idf_svc::hal::prelude::{FromValueType, Peripherals};
 
-use bmp180_driver::{BMP180, CommonActions, Sampling};
+use bmp180_driver::{BMP180, Common, Sampling};
 
 fn main() -> Result<(), Box<dyn Error>> {
     esp_idf_svc::sys::link_patches();
@@ -20,16 +20,16 @@ fn main() -> Result<(), Box<dyn Error>> {
         peripherals.i2c0, sda, scl, &config,
     )?;
 
-    let mut sensor = BMP180::new(i2c);
+    let mut sensor = BMP180::new(i2c, FreeRtos);
 
-    sensor.test_connection()?;
-    sensor.reset()?;
+    // sensor.test_connection()?;
+    // sensor.reset()?;
+    //
+    // let mut sensor = sensor.initialize(Sampling::UltraHigResolution)?;
 
-    let mut sensor = sensor.initialize(Sampling::UltraHigResolution)?;
-
-    loop {
-        println!("{:?}", sensor.read_all_data()?);
-    }
+    // loop {
+    //     println!("{:?}", sensor.read_all_data()?);
+    // }
 
     // let mut buffer = [0;8];
     //
