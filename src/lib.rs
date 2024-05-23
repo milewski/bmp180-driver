@@ -1,8 +1,12 @@
+use std::error::Error;
+use std::fmt::{Debug, Display, Pointer};
 use embedded_hal::delay::DelayNs;
 use embedded_hal::i2c::I2c;
 use coefficients::Coefficients;
+use error::CustomError;
 
 mod coefficients;
+mod error;
 
 #[derive(Copy, Clone)]
 pub enum Sampling {
@@ -10,18 +14,6 @@ pub enum Sampling {
     Standard = 1,
     HighResolution = 2,
     UltraHigResolution = 3,
-}
-
-enum CustomError<T> {
-    InvalidCalibrationData,
-    InvalidDeviceIdentifier,
-    I2c(T),
-}
-
-impl<T> From<T> for CustomError<T> {
-    fn from(error: T) -> Self {
-        CustomError::I2c(error)
-    }
 }
 
 enum RegisterMap {
@@ -98,13 +90,13 @@ impl<T: I2c, D: DelayNs> InitializedBMP180<T, D> {
         Ok(u16::from_be_bytes(self.inner.write_and_read_exactly(&[RegisterMap::DataOutputStart as u8])?))
     }
 
-    fn read_up(&mut self) -> Result<i32, CustomError<T::Error>> {
-        let oss = self.data.sampling as u8;
+    fn read_up(&mut self, sampling: Sampling) -> Result<i32, CustomError<T::Error>> {
+        let oss = sampling as u8;
         let mut buffer = [0u8; 4];
 
         self.inner.write(&[RegisterMap::MeasurementControl as u8, Command::PressureCommand as u8 + (oss << 6)])?;
 
-        self.inner.delay.delay_ms(match self.data.sampling {
+        self.inner.delay.delay_ms(match sampling {
             Sampling::UltraLowPower => 5,
             Sampling::Standard => 8,
             Sampling::HighResolution => 14,
@@ -123,30 +115,30 @@ impl<T: I2c, D: DelayNs> InitializedBMP180<T, D> {
         Ok(temperature)
     }
 
-    pub fn read_all_data(&mut self) -> Result<(f32, i32, f32), CustomError<T::Error>> {
+    pub fn read_all_data(&mut self, sampling: Sampling) -> Result<(f32, i32, f32), CustomError<T::Error>> {
         let ut = self.read_ut()?;
-        let up = self.read_up()?;
+        let up = self.read_up(sampling)?;
 
         let (temperature, b5) = self.data.calculate_temperature(ut as i32);
 
-        let pressure = self.data.calculate_pressure(b5, up);
+        let pressure = self.data.calculate_pressure(b5, up, sampling);
         let altitude = self.data.calculate_altitude(pressure);
 
         Ok((temperature, pressure, altitude))
     }
 
-    pub fn get_pressure(&mut self) -> Result<i32, CustomError<T::Error>> {
+    pub fn get_pressure(&mut self, sampling: Sampling) -> Result<i32, CustomError<T::Error>> {
         let ut = self.read_ut()?;
         let (_, b5) = self.data.calculate_temperature(ut as i32);
-        let up = self.read_up()?;
+        let up = self.read_up(sampling)?;
 
-        let pressure = self.data.calculate_pressure(b5, up);
+        let pressure = self.data.calculate_pressure(b5, up, sampling);
 
         Ok(pressure)
     }
 
-    pub fn altitude(&mut self) -> Result<f32, CustomError<T::Error>> {
-        let pressure = self.get_pressure()?;
+    pub fn altitude(&mut self, sampling: Sampling) -> Result<f32, CustomError<T::Error>> {
+        let pressure = self.get_pressure(sampling)?;
         let sea_level_pressure = 101_325f32;
         let p_sea_level_ratio: f32 = pressure as f32 / sea_level_pressure;
         let altitude = 44_330.0 * (1.0 - p_sea_level_ratio.powf(1.0 / 5.255));
@@ -168,12 +160,12 @@ impl<T: I2c, D: DelayNs> BMP180<T, D> {
         }
     }
 
-    pub fn initialize(mut self, sampling_rate: Sampling) -> Result<InitializedBMP180<T, D>, CustomError<T::Error>> {
+    pub fn initialize(mut self) -> Result<InitializedBMP180<T, D>, CustomError<T::Error>> {
         let mut buffer = [0u8; 22];
 
         self.i2c.write_read(self.address, &[RegisterMap::CalibrationOut as u8], &mut buffer)?;
 
-        let calibration = Coefficients::new(buffer, sampling_rate)?;
+        let calibration = Coefficients::new(buffer)?;
 
         Ok(InitializedBMP180 { inner: self, data: calibration })
     }

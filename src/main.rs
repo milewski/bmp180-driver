@@ -25,11 +25,11 @@ fn main() -> Result<(), Box<dyn Error>> {
     // sensor.test_connection()?;
     // sensor.reset()?;
     //
-    // let mut sensor = sensor.initialize(Sampling::UltraHigResolution)?;
+    let mut sensor = sensor.initialize()?;
 
-    // loop {
-    //     println!("{:?}", sensor.read_all_data()?);
-    // }
+    loop {
+        println!("{:?}", sensor.get_pressure(Sampling::HighResolution)?);
+    }
 
     // let mut buffer = [0;8];
     //

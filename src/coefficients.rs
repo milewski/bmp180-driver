@@ -1,8 +1,7 @@
-use crate::{CustomError, Sampling};
+use crate::error::CustomError;
+use crate::Sampling;
 
 pub struct Coefficients {
-    pub sampling: Sampling,
-
     ac1: i16,
     ac2: i16,
     ac3: i16,
@@ -17,13 +16,8 @@ pub struct Coefficients {
 }
 
 impl Coefficients {
-    pub fn new<T>(data: [u8; 22], oss: Sampling) -> Result<Self, CustomError<T>> {
-        if data.iter().any(|&byte| byte == 0x00 || byte == 0xFF) {
-            return Err(CustomError::InvalidCalibrationData);
-        }
-
-        Ok(Self {
-            sampling: oss,
+    pub fn new<T>(data: [u8; 22]) -> Result<Self, CustomError<T>> {
+        let instance = Self {
             ac1: i16::from_be_bytes(data[00..02].try_into().unwrap()),
             ac2: i16::from_be_bytes(data[02..04].try_into().unwrap()),
             ac3: i16::from_be_bytes(data[04..06].try_into().unwrap()),
@@ -37,7 +31,13 @@ impl Coefficients {
             mb: i16::from_be_bytes(data[16..18].try_into().unwrap()),
             mc: i16::from_be_bytes(data[18..20].try_into().unwrap()),
             md: i16::from_be_bytes(data[20..22].try_into().unwrap()),
-        })
+        };
+
+        if [instance.ac1, instance.ac2, instance.ac3]
+            .iter()
+            .any(|&byte| byte == 0x00 || byte == 0xFFFF) { return Err(CustomError::InvalidCalibrationData); }
+
+        Ok(instance)
     }
 
     pub fn calculate_temperature(&self, ut: i32) -> (f32, i32) {
@@ -49,8 +49,8 @@ impl Coefficients {
         (temperature, b5)
     }
 
-    pub fn calculate_pressure(&self, b5: i32, up: i32) -> i32 {
-        let oss = self.sampling as u8;
+    pub fn calculate_pressure(&self, b5: i32, up: i32, oss: Sampling) -> i32 {
+        let oss = oss as u8;
         let b6: i32 = b5 - 4000i32;
 
         let t = b6.pow(2) >> 12;
