@@ -21,6 +21,7 @@ impl Coefficients {
             ac1: i16::from_be_bytes(data[00..02].try_into().unwrap()),
             ac2: i16::from_be_bytes(data[02..04].try_into().unwrap()),
             ac3: i16::from_be_bytes(data[04..06].try_into().unwrap()),
+
             ac4: u16::from_be_bytes(data[06..08].try_into().unwrap()),
             ac5: u16::from_be_bytes(data[08..10].try_into().unwrap()),
             ac6: u16::from_be_bytes(data[10..12].try_into().unwrap()),
@@ -33,9 +34,16 @@ impl Coefficients {
             md: i16::from_be_bytes(data[20..22].try_into().unwrap()),
         };
 
-        if [instance.ac1, instance.ac2, instance.ac3]
+        let validate_i16 = |&byte| { byte == 0x00 || byte == 0xFFFFu16 as i16 };
+        let validate_u16 = |&byte| { byte == 0x00 || byte == 0xFFFF };
+
+        if [instance.ac1, instance.ac2, instance.ac3, instance.b1, instance.b2, instance.mb, instance.mc, instance.md]
             .iter()
-            .any(|&byte| byte == 0x00 || byte == 0xFFFF) { return Err(CustomError::InvalidCalibrationData); }
+            .any(validate_i16) { return Err(CustomError::InvalidCalibrationData); }
+
+        if [instance.ac4, instance.ac5, instance.ac6]
+            .iter()
+            .any(validate_u16) { return Err(CustomError::InvalidCalibrationData); }
 
         Ok(instance)
     }

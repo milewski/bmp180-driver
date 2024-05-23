@@ -1,5 +1,5 @@
-use std::fmt::{Debug, Display, Formatter, Pointer};
 use std::error::Error;
+use std::fmt::{Debug, Display, Formatter, Pointer};
 
 #[derive(Debug)]
 pub enum CustomError<T> {
@@ -11,8 +11,8 @@ pub enum CustomError<T> {
 impl<T> Display for CustomError<T> {
     fn fmt(&self, formatter: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
-            CustomError::InvalidCalibrationData => write!(formatter, "Accor"),
-            CustomError::InvalidDeviceIdentifier => write!(formatter, "{}", self),
+            CustomError::InvalidCalibrationData => write!(formatter, "Invalid calibration coefficients."),
+            CustomError::InvalidDeviceIdentifier => write!(formatter, "Invalid Device Identifier."),
             CustomError::I2c(error) => error.fmt(formatter)
         }
     }

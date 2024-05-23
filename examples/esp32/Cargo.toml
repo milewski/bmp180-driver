@@ -1,6 +1,6 @@
 [package]
-name = "bmp180-driver"
-version = "0.1.0"
+name = "esp32-bmp180-example"
+version = "0.0.0"
 authors = ["Rafael Milewski <rafael.milewski@gmail.com>"]
 edition = "2021"
 resolver = "2"
@@ -14,7 +14,8 @@ debug = true
 opt-level = "z"
 
 [dependencies]
-embedded-hal = "1.0.0"
+esp-idf-svc = { version = "0.48", features = ["native", "binstart"] }
+bmp180-driver = { path = "../.." }
 
 [build-dependencies]
 embuild = "0.31"

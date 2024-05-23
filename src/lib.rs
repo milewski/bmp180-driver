@@ -45,18 +45,23 @@ pub trait Common<T: I2c> {
     fn reset(&mut self) -> Result<(), CustomError<T::Error>>;
 }
 
+
+/// Represents an initialized version of the sensor
 pub struct BMP180<T, D> {
     address: u8,
     i2c: T,
     delay: D,
 }
 
+/// Call [BMP180::initialize] to obtain an instance of this struct
+/// An initialized struct means that the coefficients has been read and validated successfully
 pub struct InitializedBMP180<T, D> {
     inner: BMP180<T, D>,
     data: Coefficients,
 }
 
 impl<T: I2c, D: DelayNs> Common<T> for InitializedBMP180<T, D> {
+    /// The returned value is hardcoded by the manufacture and should be equivalent to 0x55
     fn id(&mut self) -> Result<u8, CustomError<T::Error>> {
         self.inner.write_single_byte(&[RegisterMap::ChipId as u8])
     }

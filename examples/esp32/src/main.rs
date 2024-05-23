@@ -8,23 +8,19 @@ use esp_idf_svc::hal::prelude::{FromValueType, Peripherals};
 use bmp180_driver::{BMP180, Common, Sampling};
 
 fn main() -> Result<(), Box<dyn Error>> {
-    esp_idf_svc::sys::link_patches();
-
     let peripherals = Peripherals::take()?;
 
     let sda = peripherals.pins.gpio6;
     let scl = peripherals.pins.gpio5;
 
     let config = Config::default().baudrate(100.kHz().into());
-    let mut i2c = I2cDriver::new(
-        peripherals.i2c0, sda, scl, &config,
-    )?;
+    let i2c = I2cDriver::new(peripherals.i2c0, sda, scl, &config)?;
 
     let mut sensor = BMP180::new(i2c, FreeRtos);
 
     // sensor.test_connection()?;
     // sensor.reset()?;
-    //
+
     let mut sensor = sensor.initialize()?;
 
     loop {
