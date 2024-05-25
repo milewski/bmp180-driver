@@ -1,5 +1,5 @@
 use crate::error::CustomError;
-use crate::Sampling;
+use crate::Resolution;
 
 pub struct Coefficients {
     ac1: i16,
@@ -57,7 +57,7 @@ impl Coefficients {
         (temperature, b5)
     }
 
-    pub fn calculate_pressure(&self, b5: i32, up: i32, oss: Sampling) -> i32 {
+    pub fn calculate_pressure(&self, b5: i32, uncompensated_pressure: i32, oss: Resolution) -> i32 {
         let oss = oss as u8;
         let b6: i32 = b5 - 4000i32;
 
@@ -71,7 +71,7 @@ impl Coefficients {
         let x3: i32 = (x1 + x2 + 2) >> 2;
 
         let b4: u32 = (self.ac4 as u32 * (x3 + 32768) as u32) >> 15;
-        let b7: u32 = (up - b3) as u32 * (50000 >> oss);
+        let b7: u32 = (uncompensated_pressure - b3) as u32 * (50000 >> oss);
         let p = if b7 < 0x80000000 {
             (b7 << 1) / b4
         } else {
@@ -86,10 +86,6 @@ impl Coefficients {
     }
 
     pub fn calculate_altitude(&self, pressure: i32) -> f32 {
-        let sea_level_pressure = 101_325f32;
-        let p_sea_level_ratio: f32 = pressure as f32 / sea_level_pressure;
-        let altitude = 44_330.0 * (1.0 - p_sea_level_ratio.powf(1.0 / 5.255));
-
-        altitude
+        44330.0 * (1.0 - (pressure as f32 / 101325.0).powf(1.0 / 5.255))
     }
 }
