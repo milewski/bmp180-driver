@@ -1,6 +1,6 @@
 [package]
 name = "bmp180-driver"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["Rafael Milewski <rafael.milewski@gmail.com>"]
 edition = "2021"
 resolver = "2"
