@@ -55,7 +55,6 @@ fn main() -> Result<(), Box<dyn Error>> {
 ## References
 
 - [BMP180 Datasheet](https://cdn-shop.adafruit.com/datasheets/BST-BMP180-DS000-09.pdf)
-- [embedded-hal](https://crates.io/crates/embedded-hal)
 
 ## License
 
