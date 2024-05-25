@@ -37,13 +37,26 @@ impl Coefficients {
         let validate_i16 = |&byte| byte == 0x00 || byte == 0xFFFFu16 as i16;
         let validate_u16 = |&byte| byte == 0x00 || byte == 0xFFFF;
 
-        if [instance.ac1, instance.ac2, instance.ac3, instance.b1, instance.b2, instance.mb, instance.mc, instance.md]
-            .iter()
-            .any(validate_i16) { return Err(CustomError::InvalidCalibrationData); }
+        let u16_values = [instance.ac4, instance.ac5, instance.ac6];
 
-        if [instance.ac4, instance.ac5, instance.ac6]
-            .iter()
-            .any(validate_u16) { return Err(CustomError::InvalidCalibrationData); }
+        let i16_values = [
+            instance.mb,
+            instance.mc,
+            instance.md,
+            instance.b1,
+            instance.b2,
+            instance.ac1,
+            instance.ac2,
+            instance.ac3,
+        ];
+
+        if i16_values.iter().any(validate_i16) {
+            return Err(CustomError::InvalidCalibrationData);
+        }
+
+        if u16_values.iter().any(validate_u16) {
+            return Err(CustomError::InvalidCalibrationData);
+        }
 
         Ok(instance)
     }

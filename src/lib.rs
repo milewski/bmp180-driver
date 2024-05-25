@@ -105,9 +105,7 @@ impl<T: I2c, D: DelayNs> InitializedBMP180<T, D> {
         self.inner.write(&[Register::MeasurementControl as u8, Command::Temperature as u8])?;
         self.inner.delay.delay_ms(5);
 
-        Ok(u16::from_be_bytes(
-            self.inner.write_and_read_exact_bytes(&[Register::DataOutputStart as u8])?,
-        ))
+        Ok(u16::from_be_bytes(self.inner.write_and_read_exact_bytes(&[Register::DataOutputStart as u8])?))
     }
 
     /// Reads uncompensated pressure.
@@ -115,9 +113,7 @@ impl<T: I2c, D: DelayNs> InitializedBMP180<T, D> {
         let oss = resolution as u8;
         let mut buffer = [0u8; 4];
 
-        self.inner.write(&[
-            Register::MeasurementControl as u8, Command::Pressure as u8 + (oss << 6)
-        ])?;
+        self.inner.write(&[Register::MeasurementControl as u8, Command::Pressure as u8 + (oss << 6)])?;
 
         self.inner.delay.delay_ms(match resolution {
             Resolution::UltraLowPower => 5,
