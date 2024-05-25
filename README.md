@@ -7,7 +7,7 @@ This library provides an interface for interacting with the BMP180 pressure sens
 You can install the package via Cargo:
 
 ```shell
-cargo add bpm180-driver
+cargo add bmp180-driver
 ```
 
 Then, you can use the library in your code as follows:
