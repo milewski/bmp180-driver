@@ -5,6 +5,16 @@ authors = ["Rafael Milewski <rafael.milewski@gmail.com>"]
 edition = "2021"
 resolver = "2"
 rust-version = "1.71"
+description = "A driver for BMP180 Digital Pressure Sensor."
+repository = "https://github.com/milewski/bmp180-driver"
+categories = ["embedded", "hardware-support"]
+keywords = ["bmp180", "driver", "pressure", "temperature"]
+readme = "README.md"
+license = "MIT"
+
+exclude = [
+    "./examples"
+]
 
 [dependencies]
-embedded-hal = "1.0.0"
+embedded-hal = "^1.0.0"

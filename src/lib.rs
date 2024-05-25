@@ -1,9 +1,7 @@
 #![doc = include_str!("../README.md")]
-use std::error::Error;
-use std::fmt::{Debug, Display, Pointer};
+use coefficients::Coefficients;
 use embedded_hal::delay::DelayNs;
 use embedded_hal::i2c::I2c;
-use coefficients::Coefficients;
 use error::CustomError;
 
 mod coefficients;
@@ -107,7 +105,9 @@ impl<T: I2c, D: DelayNs> InitializedBMP180<T, D> {
         self.inner.write(&[Register::MeasurementControl as u8, Command::Temperature as u8])?;
         self.inner.delay.delay_ms(5);
 
-        Ok(u16::from_be_bytes(self.inner.write_and_read_exact_bytes(&[Register::DataOutputStart as u8])?))
+        Ok(u16::from_be_bytes(
+            self.inner.write_and_read_exact_bytes(&[Register::DataOutputStart as u8])?,
+        ))
     }
 
     /// Reads uncompensated pressure.
@@ -115,7 +115,9 @@ impl<T: I2c, D: DelayNs> InitializedBMP180<T, D> {
         let oss = resolution as u8;
         let mut buffer = [0u8; 4];
 
-        self.inner.write(&[Register::MeasurementControl as u8, Command::Pressure as u8 + (oss << 6)])?;
+        self.inner.write(&[
+            Register::MeasurementControl as u8, Command::Pressure as u8 + (oss << 6)
+        ])?;
 
         self.inner.delay.delay_ms(match resolution {
             Resolution::UltraLowPower => 5,
@@ -173,7 +175,7 @@ impl<T: I2c, D: DelayNs> BMP180<T, D> {
     /// Creates a new instance of BMP180 sensor.
     pub fn new(i2c: T, delay: D) -> Self {
         Self {
-            address: 0b111_0_111,
+            address: 0b111_0111,
             delay,
             i2c,
         }
@@ -187,7 +189,10 @@ impl<T: I2c, D: DelayNs> BMP180<T, D> {
 
         let calibration = Coefficients::new(buffer)?;
 
-        Ok(InitializedBMP180 { inner: self, data: calibration })
+        Ok(InitializedBMP180 {
+            inner: self,
+            data: calibration,
+        })
     }
 
     /// Sets the I2C address of the sensor.

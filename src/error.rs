@@ -19,7 +19,7 @@ impl<T> Display for CustomError<T> {
         match self {
             CustomError::InvalidCalibrationData => write!(formatter, "Invalid calibration coefficients."),
             CustomError::InvalidDeviceIdentifier => write!(formatter, "Invalid device identifier."),
-            CustomError::I2c(error) => error.fmt(formatter)
+            CustomError::I2c(error) => error.fmt(formatter),
         }
     }
 }
